@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "name": "Kiran Ghogare",
+    "rating": 5,
+    "text": "Great quality and latest brands available. So fast visit shop and got your best laptop and pc. Diwali offer coming soon please visit shop.",
+    "date": "a year ago",
+    "photoCount": 11,
+    "reviewCount": 3
+  },
+  {
+    "id": "2",
+    "name": "Aditya Vhare",
+    "rating": 5,
+    "text": "Better service and branded device in cheap rates. MS Computer is destination point our requirement.",
+    "date": "3 months ago",
+    "photoCount": 2,
+    "reviewCount": 5
+  },
+  {
+    "id": "3",
+    "name": "Barve Tanaji",
+    "rating": 5,
+    "text": "Very nice service thank you Shekh Saheb.",
+    "date": "8 months ago",
+    "photoCount": 1,
+    "reviewCount": 3
+  },
+  {
+    "id": "4",
+    "name": "Sudhir Patil",
+    "rating": 5,
+    "text": "Staff is polite and helpful. Overall a great shopping experience.",
+    "date": "2 months ago",
+    "photoCount": 0,
+    "reviewCount": 4
+  }
+]
