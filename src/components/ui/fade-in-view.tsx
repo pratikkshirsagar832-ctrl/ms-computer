@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState } from "react"
+import React, { useRef, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface FadeInViewProps {
@@ -71,10 +71,12 @@ export function StaggerGrid({
     return () => observer.disconnect()
   }, [])
 
+  const items = Array.isArray(children) ? children : [children]
   return (
     <div ref={ref} className={className}>
-      {React.Children.map(children, (child, i) => (
+      {items.map((child, i) => (
         <div
+          key={i}
           className={cn(
             "transition-all duration-600 ease-out",
             visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
