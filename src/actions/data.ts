@@ -62,7 +62,7 @@ export async function addProduct(product: Product) {
 
 export async function updateProduct(id: string, data: Partial<Product>) {
   const payload = { ...data, updated_at: new Date().toISOString() }
-  if (payload.specs) payload.specs = JSON.stringify(payload.specs)
+  if (payload.specs) (payload as any).specs = JSON.stringify(payload.specs)
   const { error } = await supabaseAdmin.from("products").update(payload).eq("id", id)
   if (error) return { success: false, error: error.message }
   revalidatePath("/products")
