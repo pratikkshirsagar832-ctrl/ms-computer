@@ -62,9 +62,11 @@ create table if not exists orders (
   payment_id text,
   payment_status text not null default 'pending',
   order_status text not null default 'pending',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  created_at timestamptz not null default now()
 );
+
+-- Add updated_at column if missing (for existing tables)
+alter table orders add column if not exists updated_at timestamptz not null default now();
 
 -- 5. Contact Messages
 create table if not exists contact_messages (
@@ -72,9 +74,11 @@ create table if not exists contact_messages (
   name text not null,
   phone text not null,
   message text not null,
-  is_read boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Add is_read column if missing (for existing tables)
+alter table contact_messages add column if not exists is_read boolean not null default false;
 
 -- 6. Order Items (normalized from JSONB)
 create table if not exists order_items (
