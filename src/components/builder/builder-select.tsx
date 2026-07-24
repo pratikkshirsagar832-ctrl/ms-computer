@@ -1,9 +1,9 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { ComponentCategory, Product } from "@/lib/types"
 import { useBuilderStore } from "@/store/builder-store"
-import { useCartStore } from "@/store/cart-store"
-import { products } from "@/lib/data"
+import { getProducts } from "@/actions/data"
 import {
   Select,
   SelectContent,
@@ -14,12 +14,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatPrice } from "@/lib/utils"
-import { X, ShoppingCart, Check } from "lucide-react"
+import { X, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
-
-const accent = "#408EC6"
-const navy = "#0A1128"
 
 interface BuilderSelectProps {
   category: ComponentCategory
@@ -36,51 +32,67 @@ const categoryLabels: Record<string, string> = {
   "Power Supply": "PSU",
 }
 
+const categoryIcons: Record<string, string> = {
+  CPU: "🔲",
+  Motherboard: "🔳",
+  RAM: "📊",
+  GPU: "🎯",
+  Storage: "💾",
+  Cabinet: "🏗️",
+  "Power Supply": "⚡",
+}
+
 export function BuilderSelect({ category, index }: BuilderSelectProps) {
   const { selection, setComponent, removeComponent } = useBuilderStore()
-  const { addItem } = useCartStore()
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([])
   const selected = selection[category]
-  const categoryProducts = products.filter((p) => p.category === category)
+
+  useEffect(() => {
+    getProducts().then((all) =>
+      setCategoryProducts(all.filter((p) => p.category === category))
+    )
+  }, [category])
 
   return (
-    <Card className="transition-all duration-300 border-0" style={{ backgroundColor: "#FFFFFF", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+    <Card className="bento-card transition-all duration-300">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold" style={{ color: navy }}>
-              {index + 1}. {category}
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
+              {index + 1}
+            </span>
+            <span className="text-sm font-bold text-foreground">
+              {category}
             </span>
           </div>
           {selected && (
-            <Badge variant="outline" className="text-xs font-medium border-0" style={{ backgroundColor: "rgba(64,142,198,0.1)", color: accent }}>
+            <Badge className="rounded-full bg-emerald-500/15 text-emerald-400 border-emerald-500/20 font-semibold text-[10px]">
+              <CheckCircle2 className="h-3 w-3 mr-1" />
               Selected
             </Badge>
           )}
         </div>
 
         {selected ? (
-          <div className="flex items-center gap-3 rounded-lg p-2.5" style={{ backgroundColor: "#F5F5F5" }}>
-            <div className="relative h-12 w-12 rounded-md overflow-hidden shrink-0" style={{ backgroundColor: "#FFFFFF" }}>
+          <div className="flex items-center gap-3 rounded-xl p-3 bg-primary/5 border border-primary/10">
+            <div className="relative h-12 w-12 rounded-lg overflow-hidden shrink-0 bg-background">
               <Image
                 src={selected.image}
                 alt={selected.name}
                 fill
                 sizes="96px"
-                className="object-contain p-1"
+                className="object-contain p-1.5"
               />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium truncate" style={{ color: navy }}>{selected.name}</p>
-              <p className="text-xs font-semibold mt-0.5" style={{ color: accent }}>
+              <p className="text-xs font-semibold truncate text-foreground">{selected.name}</p>
+              <p className="text-xs font-bold mt-0.5 text-primary">
                 {formatPrice(selected.price)}
               </p>
             </div>
             <button
               onClick={() => removeComponent(category)}
-              className="p-1.5 rounded-full transition-colors"
-              style={{ color: "#9CA3AF" }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = "#EF4444" }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = "#9CA3AF" }}
+              className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -93,23 +105,19 @@ export function BuilderSelect({ category, index }: BuilderSelectProps) {
               if (product) setComponent(category, product)
             }}
           >
-            <SelectTrigger
-              className="w-full text-sm h-10"
-              style={{ backgroundColor: "#F5F5F5", borderColor: "#E5E7EB", color: "#9CA3AF" }}
-            >
+            <SelectTrigger className="w-full text-sm h-10 rounded-xl border-white/10 bg-card/50 hover:border-primary/30 transition-colors">
               <SelectValue placeholder={`Select ${categoryLabels[category] || category}...`} />
             </SelectTrigger>
-            <SelectContent style={{ backgroundColor: "#FFFFFF", borderColor: "#E5E7EB" }}>
+            <SelectContent>
               {categoryProducts.map((product) => (
                 <SelectItem
                   key={product.id}
                   value={product.id}
-                  disabled={!product.inStock}
-                  style={{ color: navy }}
+                  disabled={!product.in_stock}
                 >
                   <div className="flex items-center justify-between w-full gap-4">
-                    <span>{product.name}</span>
-                    <span className="font-medium" style={{ color: accent }}>
+                    <span className="truncate">{product.name}</span>
+                    <span className="font-semibold text-primary shrink-0">
                       {formatPrice(product.price)}
                     </span>
                   </div>

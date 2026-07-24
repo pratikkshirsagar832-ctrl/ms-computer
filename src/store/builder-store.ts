@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { Product, BuilderSelection, ComponentCategory } from "@/lib/types"
-import { products } from "@/lib/data"
+
 
 const mandatoryCategories: ComponentCategory[] = [
   "CPU", "Motherboard", "RAM", "GPU", "Storage", "Cabinet", "Power Supply",

@@ -1,53 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { storeInfo, products, reviews, categories } from "@/lib/data"
 import { formatPrice } from "@/lib/utils"
+import { getStoreInfo, getProducts, getReviews } from "@/actions/data"
+import type { Product, Review, StoreInfo } from "@/lib/types"
+import { categories } from "@/lib/data"
 import {
-  Star, ArrowRight, Monitor, Cpu, Gamepad2, Shield, Truck,
+  Star, ArrowRight, Cpu, Shield, Truck,
   Headphones, ChevronRight, MapPin, Phone, Clock, CheckCircle,
+  Sparkles, Zap, Wrench, Award,
 } from "lucide-react"
-
-const accent = "#408EC6"
-const navy = "#0A1128"
+import { cn } from "@/lib/utils"
+import { FadeInView, StaggerGrid } from "@/components/ui/fade-in-view"
+import { useWishlistStore } from "@/store/wishlist-store"
+import { Heart } from "lucide-react"
 
 export default function Home() {
-  const featuredProducts = products.filter((p) => p.price > 10000).slice(0, 8)
+  const [store, setStore] = useState<StoreInfo | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
+  const heroRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    getStoreInfo().then(setStore)
+    getProducts().then(setProducts)
+    getReviews().then(setReviews)
+  }, [])
+
+  const featuredProducts = products.filter((p) => p.price > 10000).slice(0, 4)
+  const bestSellers = products.filter((p) => p.price > 5000).slice(0, 3)
+  const wishlist = useWishlistStore()
 
   return (
-    <div style={{ backgroundColor: "#F5F5F5" }}>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden" style={{ backgroundColor: navy }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#408EC6]/20 via-transparent to-[#0A1128]" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#408EC6]/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#0A1128]/40 rounded-full blur-3xl" />
+    <div>
+      {/* ================================================
+          HERO SECTION
+          ================================================ */}
+      <section ref={heroRef} className="relative overflow-hidden pb-16 sm:pb-24">
+        {/* Atmosphere orbs */}
+        <div className="hero-orb hero-orb-primary w-[600px] h-[600px] -top-40 -right-40" />
+        <div className="hero-orb hero-orb-accent w-[500px] h-[500px] -bottom-32 -left-32" />
+        <div className="hero-orb hero-orb-primary w-[300px] h-[300px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30" />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 pt-20 sm:pt-28 lg:pt-32 sm:px-6 lg:px-8">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#408EC6]/30 bg-[#408EC6]/10 px-4 py-1.5 text-sm" style={{ color: "#408EC6" }}>
-                <Star className="h-3.5 w-3.5 fill-[#408EC6]" />
-                {storeInfo.rating} Rating &bull; {storeInfo.reviewCount}+ Reviews
+            {/* Left content */}
+            <div className="space-y-8 stagger-children">
+              {/* Pill badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm backdrop-blur">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-primary font-medium">{store?.rating} ★ Rating</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground">{store?.review_count}+ Reviews</span>
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl leading-tight">
+
+              {/* Headline */}
+              <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl leading-[1.05]">
                 Build Your{" "}
-                <span style={{ color: "#408EC6" }}>
-                  Dream PC
-                </span>{" "}
+                <span className="gradient-text">Dream PC</span>
+                <br />
                 in Sangola
               </h1>
-              <p className="text-lg max-w-lg leading-relaxed" style={{ color: "#9CA3AF" }}>
-                {storeInfo.tagline}. Premium custom builds for gamers, video editors, and AI
-                developers at the best prices in Sangola, Maharashtra.
+
+              {/* Subtitle */}
+              <p className="text-lg max-w-lg leading-relaxed text-muted-foreground">
+                {store?.tagline}. Premium custom builds for gamers, video editors,
+                and AI developers — with expert guidance and local support.
               </p>
+
+              {/* CTAs */}
               <div className="flex flex-wrap gap-3">
                 <Link href="/builder">
-                  <Button className="text-white font-semibold px-8 h-12 text-base border-0" style={{ backgroundColor: accent }}>
+                  <Button className="font-semibold px-8 h-12 text-base rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 bg-primary hover:bg-primary/90">
                     Build Your PC
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -55,22 +84,21 @@ export default function Home() {
                 <Link href="/products">
                   <Button
                     variant="outline"
-                    className="text-[#9CA3AF] px-8 h-12 text-base"
-                    style={{ borderColor: "rgba(255,255,255,0.15)" }}
+                    className="px-8 h-12 text-base rounded-full border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300"
                   >
                     Browse Products
                   </Button>
                 </Link>
               </div>
 
+              {/* Social proof */}
               <div className="flex items-center gap-4 pt-4">
                 <div className="flex -space-x-2">
                   {["/cpu-icon.png", "/gaming-pc.png", "/pc-build.jpg", "/gaming-pc.png"].map(
                     (src, i) => (
                       <div
                         key={i}
-                        className="h-10 w-10 rounded-full border-2 border-[#0A1128] overflow-hidden"
-                        style={{ backgroundColor: "#1a1a2e" }}
+                        className="h-10 w-10 rounded-full border-2 border-background overflow-hidden bg-muted ring-2 ring-primary/10"
                       >
                         <Image
                           src={src}
@@ -83,41 +111,57 @@ export default function Home() {
                     )
                   )}
                 </div>
-                <p style={{ color: "#6B7280" }}>
-                  <span className="font-semibold text-white">146+</span> happy customers
-                </p>
+                <div>
+                  <p className="text-sm text-foreground font-semibold">146+ happy customers</p>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
+            {/* Right visual */}
             <div className="relative hidden lg:block">
-              <div className="relative aspect-square max-w-md mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#408EC6]/20 to-[#0A1128]/40 rounded-full blur-3xl" />
-                <Image
-                  src="/gaming-pc.png"
-                  alt="Gaming PC"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-contain relative z-10 drop-shadow-2xl"
-                  priority
-                />
+              <div className="relative aspect-square max-w-lg mx-auto animate-float-slow">
+                {/* Glow rings */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 via-transparent to-accent/10 blur-3xl animate-pulse-glow" />
+                <div className="absolute inset-8 rounded-full border border-primary/10 animate-pulse-glow" style={{ animationDelay: "0.5s" }} />
+                <div className="absolute inset-16 rounded-full border border-primary/5" />
+
+                {/* Main image */}
+                <div className="relative z-10 flex items-center justify-center h-full">
+                  <Image
+                    src="/gaming-pc.png"
+                    alt="Gaming PC Build"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain drop-shadow-2xl"
+                    priority
+                  />
+                </div>
               </div>
 
-              <div className="absolute top-8 -left-4 rounded-lg px-4 py-3 shadow-xl backdrop-blur-sm" style={{ backgroundColor: "rgba(10,17,40,0.95)", border: "1px solid rgba(64,142,198,0.2)" }}>
-                <p style={{ color: "#9CA3AF" }} className="text-xs">Starting from</p>
-                <p className="text-sm font-bold" style={{ color: accent }}>{formatPrice(25000)}</p>
+              {/* Floating cards */}
+              <div className="absolute top-10 -left-2 rounded-xl px-5 py-3 shadow-2xl glass animate-float" style={{ animationDelay: "0.3s" }}>
+                <p className="text-muted-foreground text-xs">Starting from</p>
+                <p className="text-lg font-bold gradient-text">{formatPrice(25000)}</p>
               </div>
-              <div className="absolute bottom-12 -right-4 rounded-lg px-4 py-3 shadow-xl backdrop-blur-sm" style={{ backgroundColor: "rgba(10,17,40,0.95)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <p style={{ color: "#9CA3AF" }} className="text-xs">Premium</p>
-                <p className="text-sm font-bold text-white">Quality Builds</p>
+              <div className="absolute bottom-14 -right-2 rounded-xl px-5 py-3 shadow-2xl glass animate-float" style={{ animationDelay: "1.5s" }}>
+                <p className="text-muted-foreground text-xs">Premium Builds</p>
+                <p className="text-sm font-bold text-foreground">3 Year Warranty</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Trust Bar */}
-      <section style={{ backgroundColor: navy, borderTop: "1px solid rgba(64,142,198,0.1)" }}>
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* ================================================
+          TRUST BAR
+          ================================================ */}
+      <FadeInView><section className="border-y border-border/40 bg-card/30 backdrop-blur">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-8 text-sm">
             {[
               { icon: Shield, label: "Genuine Products", sub: "100% authentic" },
@@ -125,89 +169,76 @@ export default function Home() {
               { icon: Headphones, label: "Expert Support", sub: "Tech assistance" },
               { icon: Clock, label: "Fast Service", sub: "Same day delivery" },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: "rgba(64,142,198,0.15)" }}>
-                  <item.icon className="h-5 w-5" style={{ color: accent }} />
+              <div key={i} className="flex items-center gap-3 group">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/10 group-hover:border-primary/30 group-hover:bg-primary/15 transition-all duration-300">
+                  <item.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">{item.label}</p>
-                  <p style={{ color: "#6B7280" }} className="text-xs">{item.sub}</p>
+                  <p className="text-sm font-medium text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.sub}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </section></FadeInView>
 
-      {/* Categories */}
+      {/* ================================================
+          CATEGORIES — BENTO GRID
+          ================================================ */}
       <section>
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold" style={{ color: navy }}>
-              What We Offer
-            </h2>
-            <p className="mt-3" style={{ color: "#6B7280" }}>
-              Everything you need under one roof
+            <span className="section-tag">Categories</span>
+            <h2 className="section-heading">What We Offer</h2>
+            <p className="mt-3 text-muted-foreground max-w-md mx-auto">
+              Everything you need under one roof — from components to complete systems
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            {categories.map((cat, i) => (
+
+          <StaggerGrid className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" staggerDelay={60}>
+            {categories.map((cat) => (
               <Link
                 key={cat.name}
-                href={`/products?category=${cat.name}`}
-                className="flex flex-col items-center gap-3 rounded-xl px-4 py-8 text-center transition-all duration-300 group hover:shadow-lg"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #E5E7EB",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = accent;
-                  e.currentTarget.style.boxShadow = "0 4px 20px rgba(64,142,198,0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#E5E7EB";
-                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
-                }}
+                href={cat.href}
+                className="bento-card group flex flex-col items-center gap-4 px-4 py-10 text-center"
               >
-                <div className="text-3xl group-hover:scale-110 transition-transform">{cat.icon}</div>
-                <span className="text-sm font-medium transition-colors" style={{ color: navy }}>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/10 group-hover:border-primary/30 group-hover:bg-primary/15 transition-all duration-300">
+                  <cat.icon className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
                   {cat.name}
                 </span>
               </Link>
             ))}
-          </div>
+          </StaggerGrid>
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section style={{ backgroundColor: "#FFFFFF" }}>
+      {/* ================================================
+          FEATURED PRODUCTS
+          ================================================ */}
+      <section className="bg-card/20">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl font-bold" style={{ color: navy }}>Featured Products</h2>
-              <p className="mt-2" style={{ color: "#6B7280" }}>Top selling items this month</p>
+              <span className="section-tag">Top Picks</span>
+              <h2 className="section-heading">Featured Products</h2>
+              <p className="mt-2 text-muted-foreground">Best selling components this month</p>
             </div>
             <Link
               href="/products"
-              className="hidden sm:flex items-center gap-1 text-sm font-medium transition-colors"
-              style={{ color: accent }}
+              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors rounded-full px-4 py-2 hover:bg-primary/5"
             >
               View All <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredProducts.slice(0, 4).map((product) => (
+          <StaggerGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" staggerDelay={70}>
+            {featuredProducts.map((product) => (
               <Link key={product.id} href={`/products/${product.id}`}>
-                <Card
-                  className="group overflow-hidden transition-all duration-300 border-0"
-                  style={{
-                    backgroundColor: "#F5F5F5",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                  }}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden" style={{ backgroundColor: "#FFFFFF" }}>
+                <Card className="bento-card group h-full">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-muted/50">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -215,36 +246,44 @@ export default function Home() {
                       sizes="(max-width: 768px) 50vw, 25vw"
                       className="object-contain p-6 group-hover:scale-105 transition-transform duration-500"
                     />
-                    <Badge
-                      className="absolute top-3 left-3 text-xs border-0 font-medium"
-                      style={{ backgroundColor: accent, color: "#FFFFFF" }}
+                    <button
+                      onClick={(e) => { e.preventDefault(); wishlist.toggle(product.id) }}
+                      className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm border border-border/40 hover:bg-background transition-all duration-200"
                     >
+                      <Heart className={`h-4 w-4 transition-all ${
+                        wishlist.has(product.id) ? "fill-red-500 text-red-500 scale-110" : "text-muted-foreground"
+                      }`} />
+                    </button>
+                    <Badge className="absolute top-3 left-3 text-[10px] font-semibold rounded-full bg-primary/20 text-primary border-primary/20">
                       {product.category}
                     </Badge>
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                      <span className="text-xs font-semibold text-white bg-primary rounded-full px-3 py-1">
+                        View Details
+                      </span>
+                    </div>
                   </div>
                   <CardContent className="p-5">
-                    <p className="text-sm font-medium truncate transition-colors" style={{ color: navy }}>
+                    <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors duration-300">
                       {product.name}
                     </p>
-                    <p className="text-lg font-bold mt-1" style={{ color: accent }}>
+                    <p className="text-lg font-bold mt-1.5 gradient-text">
                       {formatPrice(product.price)}
                     </p>
                     <div className="flex items-center gap-1 mt-2">
                       <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                      <span style={{ color: "#9CA3AF" }} className="text-xs">{storeInfo.rating}</span>
+                      <span className="text-muted-foreground text-xs">{store?.rating}</span>
                     </div>
                   </CardContent>
                 </Card>
               </Link>
             ))}
-          </div>
+          </StaggerGrid>
 
           <div className="mt-6 text-center sm:hidden">
             <Link href="/products">
-              <Button
-                variant="outline"
-                style={{ borderColor: accent, color: accent }}
-              >
+              <Button variant="outline" className="rounded-full">
                 View All Products <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
@@ -252,38 +291,39 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section>
+      {/* ================================================
+          WHY CHOOSE US — BENTO GRID
+          ================================================ */}
+      <FadeInView><section>
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold" style={{ color: navy }}>Why Choose MS Computer?</h2>
-            <p className="mt-3" style={{ color: "#6B7280" }}>We deliver quality and trust</p>
+            <span className="section-tag">Why Us</span>
+            <h2 className="section-heading">Why Choose MS Computer?</h2>
+            <p className="mt-3 text-muted-foreground max-w-md mx-auto">
+              We deliver quality, trust, and performance
+            </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { icon: Cpu, title: "Custom PC Builds", desc: "Tailored systems for gaming, editing & AI", features: ["Premium components", "Optimized cooling", "Cable management"] },
               { icon: Shield, title: "Genuine Products", desc: "100% authentic branded components", features: ["Brand warranty", "Original packaging", "No refurbished"] },
-              { icon: Truck, title: "Free Delivery", desc: "Free local delivery in Sangola area", features: ["Same day delivery", "Safe packaging", "Doorstep service"] },
-              { icon: Headphones, title: "Expert Support", desc: "Professional tech support & service", features: ["On-site service", "Remote support", "Extended warranty"] },
+              { icon: Wrench, title: "Expert Assembly", desc: "Professional build & testing service", features: ["BIOS configured", "Stress tested", "Ready to use"] },
+              { icon: Award, title: "3 Year Support", desc: "Extended warranty & tech support", features: ["On-site service", "Remote support", "Free diagnostics"] },
             ].map((item, i) => (
               <div
                 key={i}
-                className="rounded-xl p-6 transition-all duration-300"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  border: "1px solid #E5E7EB",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
+                className="bento-card p-6 group"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg mb-4" style={{ backgroundColor: "rgba(64,142,198,0.1)" }}>
-                  <item.icon className="h-6 w-6" style={{ color: accent }} />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl mb-5 bg-primary/10 border border-primary/10 group-hover:border-primary/30 group-hover:bg-primary/15 transition-all duration-300">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-base font-semibold mb-1" style={{ color: navy }}>{item.title}</h3>
-                <p style={{ color: "#6B7280" }} className="text-sm mb-3">{item.desc}</p>
-                <ul className="space-y-1.5">
+                <h3 className="font-display text-base font-bold mb-2 text-foreground">{item.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{item.desc}</p>
+                <ul className="space-y-2">
                   {item.features.map((f, j) => (
-                    <li key={j} className="flex items-center gap-2 text-xs" style={{ color: "#9CA3AF" }}>
-                      <CheckCircle className="h-3 w-3" style={{ color: accent }} />
+                    <li key={j} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -292,130 +332,148 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section></FadeInView>
 
-      {/* Store Showcase */}
-      <section style={{ backgroundColor: "#FFFFFF" }}>
+      {/* ================================================
+          STORE SHOWCASE
+          ================================================ */}
+      <FadeInView><section className="bg-card/20">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden" style={{ boxShadow: "0 20px 60px rgba(10,17,40,0.12)" }}>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border/40 shadow-2xl group">
               <Image
                 src="/out-of-shop.png"
                 alt="MS Computer Store"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
+                className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4 rounded-xl glass px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">Visit Our Store</p>
+                <p className="text-xs text-muted-foreground">{store?.address}</p>
+              </div>
             </div>
+
             <div className="space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium" style={{ backgroundColor: "rgba(64,142,198,0.1)", color: accent }}>
-                Visit Our Store
+              <span className="pill">
+                <MapPin className="h-3.5 w-3.5" />
+                Your Local PC Expert
               </span>
-              <h2 className="text-3xl font-bold" style={{ color: navy }}>
-                MS Computer — Your Local PC Expert in Sangola
+              <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl leading-tight">
+                MS Computer — Sangola&apos;s Premier PC Store
               </h2>
-              <p style={{ color: "#6B7280" }} className="leading-relaxed">
-                Located at {storeInfo.address}, we provide premium custom PC builds, laptops,
-                CCTV cameras, and all computer accessories. Visit us for personalized service
-                and the best deals in town.
+              <p className="text-muted-foreground leading-relaxed">
+                Located at {store?.address}, we provide premium custom PC builds, gaming
+                rigs, laptops, CCTV cameras, and all computer accessories. Our expert team
+                helps you choose the right components for your needs and budget.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
-                <div className="flex items-center gap-2 text-sm" style={{ color: "#6B7280" }}>
-                  <MapPin className="h-4 w-4 shrink-0" style={{ color: accent }} />
-                  {storeInfo.address}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  {store?.address}
                 </div>
-                <div className="flex items-center gap-2 text-sm" style={{ color: "#6B7280" }}>
-                  <Phone className="h-4 w-4 shrink-0" style={{ color: accent }} />
-                  {storeInfo.phone}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                    <Phone className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <a href={`tel:${store?.phone}`} className="hover:text-primary transition-colors">
+                    {store?.phone}
+                  </a>
                 </div>
               </div>
               <Link href="/contact">
-                <Button
-                  variant="outline"
-                  className="font-medium mt-2"
-                  style={{ borderColor: accent, color: accent }}
-                >
+                <Button variant="outline" className="rounded-full font-medium">
                   Get Directions <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
             </div>
           </div>
         </div>
-      </section>
+      </section></FadeInView>
 
-      {/* Reviews */}
+      {/* ================================================
+          REVIEWS
+          ================================================ */}
       <section>
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold" style={{ color: navy }}>What Our Customers Say</h2>
-            <p className="mt-3" style={{ color: "#6B7280" }}>
-              {storeInfo.rating} out of 5 &bull; {storeInfo.reviewCount} reviews
+            <span className="section-tag">Testimonials</span>
+            <h2 className="section-heading">What Our Customers Say</h2>
+            <p className="mt-3 text-muted-foreground">
+              <span className="font-bold text-foreground">{store?.rating}</span> out of 5 &bull;{" "}
+              {store?.review_count} reviews on Google
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerGrid className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" staggerDelay={100}>
             {reviews.slice(0, 3).map((review) => (
-              <Card
-                key={review.id}
-                className="border-0"
-                style={{
-                  backgroundColor: "#FFFFFF",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
-              >
-                <CardContent className="p-6 space-y-4">
+              <Card key={review.id} className="bento-card p-6">
+                <div className="space-y-4">
                   <div className="flex items-center gap-1">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < review.rating ? "fill-amber-400 text-amber-400" : "text-gray-200"
+                          i < review.rating ? "fill-amber-400 text-amber-400" : "text-muted/30"
                         }`}
                       />
                     ))}
                   </div>
-                  <p className="text-sm leading-relaxed" style={{ color: "#6B7280" }}>
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     &ldquo;{review.text}&rdquo;
                   </p>
-                  <div className="flex items-center justify-between pt-2 border-t" style={{ borderColor: "#F3F4F6" }}>
+                  <div className="flex items-center justify-between pt-3 border-t border-border/40">
                     <div>
-                      <p className="text-sm font-medium" style={{ color: navy }}>{review.name}</p>
-                      <p style={{ color: "#9CA3AF" }} className="text-xs">{review.date}</p>
+                      <p className="text-sm font-semibold text-foreground">{review.name}</p>
+                      <p className="text-xs text-muted-foreground">{review.date}</p>
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                     </div>
                   </div>
-                </CardContent>
+                </div>
               </Card>
             ))}
-          </div>
+          </StaggerGrid>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ backgroundColor: navy }}>
+      {/* ================================================
+          CTA
+          ================================================ */}
+      <FadeInView><section className="bg-card/20">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-2xl px-8 py-16 text-center sm:px-20" style={{ backgroundColor: "rgba(64,142,198,0.08)", border: "1px solid rgba(64,142,198,0.15)" }}>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#408EC6]/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#0A1128]/30 rounded-full blur-3xl" />
-            <div className="relative">
-              <h2 className="text-3xl font-bold text-white sm:text-4xl">
-                Ready to Build Your Dream PC?
+          <div className="relative overflow-hidden rounded-3xl px-8 py-20 sm:px-20 text-center border border-primary/10 bg-gradient-to-br from-primary/5 via-transparent to-accent/5">
+            {/* Orbs */}
+            <div className="hero-orb hero-orb-primary w-[400px] h-[400px] -top-20 -right-20 opacity-50" />
+            <div className="hero-orb hero-orb-accent w-[300px] h-[300px] -bottom-20 -left-20 opacity-40" />
+
+            <div className="relative space-y-6">
+              <span className="pill">
+                <Zap className="h-3.5 w-3.5" />
+                Start Building Today
+              </span>
+              <h2 className="font-display text-3xl font-bold text-foreground sm:text-5xl leading-tight">
+                Ready to Build Your{" "}
+                <span className="gradient-text">Dream PC?</span>
               </h2>
-              <p style={{ color: "#9CA3AF" }} className="mt-4 max-w-lg mx-auto">
+              <p className="text-muted-foreground max-w-lg mx-auto text-lg">
                 Visit our store in Sangola or use our online PC Builder to configure
-                your perfect system.
+                your perfect system — we handle the rest.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap justify-center gap-4 pt-4">
                 <Link href="/builder">
-                  <Button className="text-white font-semibold px-8 h-12 text-base border-0" style={{ backgroundColor: accent }}>
+                  <Button className="font-semibold px-8 h-12 text-base rounded-full shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300">
+                    <Cpu className="mr-2 h-4 w-4" />
                     Start Building
                   </Button>
                 </Link>
                 <Link href="/contact">
-                  <Button
-                    variant="outline"
-                    className="text-white px-8 h-12 text-base"
-                    style={{ borderColor: "rgba(255,255,255,0.2)" }}
-                  >
+                  <Button variant="outline" className="px-8 h-12 text-base rounded-full border-white/10 hover:bg-white/5">
+                    <MapPin className="mr-2 h-4 w-4" />
                     Visit Store
                   </Button>
                 </Link>
@@ -423,27 +481,37 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section></FadeInView>
 
-      {/* Footer Info Bar */}
-      <section style={{ backgroundColor: navy, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+      {/* ================================================
+          CONTACT BAR
+          ================================================ */}
+      <FadeInView><section className="bg-card/40 border-t border-border/40">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2" style={{ color: "#6B7280" }}>
-              <MapPin className="h-4 w-4" style={{ color: accent }} />
-              {storeInfo.address}
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <MapPin className="h-3.5 w-3.5 text-primary" />
+              </div>
+              {store?.address}
             </div>
-            <div className="flex items-center gap-2" style={{ color: "#6B7280" }}>
-              <Phone className="h-4 w-4" style={{ color: accent }} />
-              {storeInfo.phone}
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <a href={`tel:${store?.phone}`} className="hover:text-primary transition-colors">
+                {store?.phone}
+              </a>
             </div>
-            <div className="flex items-center gap-2" style={{ color: "#6B7280" }}>
-              <Clock className="h-4 w-4" style={{ color: accent }} />
-              {storeInfo.hours}
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+              </div>
+              {store?.hours}
             </div>
           </div>
         </div>
-      </section>
+      </section></FadeInView>
     </div>
   )
 }
